@@ -4,6 +4,6 @@ opencv-python-headless==4.10.0.84
 pillow
 numpy==1.26.4
 streamlit-webrtc==0.64.5
-av==10.0.0
-torch==2.2.2
-torchvision==0.17.2
+av
+torch
+torchvision
