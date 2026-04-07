@@ -23,6 +23,11 @@ header {visibility: hidden;}
 # =====================
 @st.cache_resource
 def load_model():
+    from torch.serialization import add_safe_globals
+    from ultralytics.nn.tasks import DetectionModel
+
+    add_safe_globals([DetectionModel])
+
     return YOLO("best.pt")
 
 model = load_model()

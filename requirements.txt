@@ -5,3 +5,5 @@ pillow
 numpy==1.26.4
 streamlit-webrtc
 av
+torch==2.5.1
+torchvision==0.20.1
