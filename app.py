@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 from PIL import Image
 from ultralytics import YOLO
-from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, RTCConfiguration
 
 # =====================
 # CONFIG
@@ -58,15 +58,19 @@ class VideoTransformer(VideoTransformerBase):
         results = model(img)
         annotated = results[0].plot()
 
-        # Tambahin status di frame
+        import cv2
+
+        # Status deteksi
         if len(results[0].boxes) > 0:
             label = "PERLU DIPERBAIKI"
+            color = (0, 0, 255)
         else:
             label = "AMAN"
+            color = (0, 255, 0)
 
         # Tampilkan text di frame
-        import cv2
-        cv2.putText(annotated, label, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(annotated, label, (20, 40),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
 
         return annotated
 
@@ -88,12 +92,12 @@ with tab1:
         col1, col2 = st.columns(2)
 
         with col1:
-            st.image(image, caption="Original Image", width='stretch')
+            st.image(image, caption="Original Image", use_container_width=True)
 
         with col2:
             with st.spinner("Detecting..."):
                 result, detected = detect_image(image_np)
-                st.image(result, caption="Detection Result", width='stretch')
+                st.image(result, caption="Detection Result", use_container_width=True)
 
                 if detected:
                     st.error("Jalan perlu diperbaiki")
@@ -104,16 +108,30 @@ with tab1:
 # TAB CAMERA (REALTIME)
 # =====================
 with tab2:
+    st.info("Jika kamera lama loading, coba gunakan jaringan lain / hotspot.")
+
+    RTC_CONFIGURATION = RTCConfiguration(
+        {
+            "iceServers": [
+                {"urls": ["stun:stun.l.google.com:19302"]},
+                {
+                    "urls": ["turn:openrelay.metered.ca:80"],
+                    "username": "openrelayproject",
+                    "credential": "openrelayproject",
+                },
+            ]
+        }
+    )
+
     webrtc_streamer(
         key="pothole-detection",
         video_transformer_factory=VideoTransformer,
-        rtc_configuration={
-            "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
-        },
+        rtc_configuration=RTC_CONFIGURATION,
         media_stream_constraints={
             "video": True,
             "audio": False
-        }
+        },
+        async_processing=True
     )
 
 # =====================
