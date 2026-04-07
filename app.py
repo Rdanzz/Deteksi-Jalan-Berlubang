@@ -1,5 +1,4 @@
 import streamlit as st
-import cv2
 import numpy as np
 from PIL import Image
 from ultralytics import YOLO
@@ -53,6 +52,17 @@ class VideoTransformer(VideoTransformerBase):
         img = frame.to_ndarray(format="bgr24")
         results = model(img)
         annotated = results[0].plot()
+
+        # Tambahin status di frame
+        if len(results[0].boxes) > 0:
+            label = "PERLU DIPERBAIKI"
+        else:
+            label = "AMAN"
+
+        # Tampilkan text di frame
+        import cv2
+        cv2.putText(annotated, label, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
         return annotated
 
 # =====================
@@ -91,7 +101,14 @@ with tab1:
 with tab2:
     webrtc_streamer(
         key="pothole-detection",
-        video_transformer_factory=VideoTransformer
+        video_transformer_factory=VideoTransformer,
+        rtc_configuration={
+            "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
+        },
+        media_stream_constraints={
+            "video": True,
+            "audio": False
+        }
     )
 
 # =====================
